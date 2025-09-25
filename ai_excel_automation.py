@@ -152,6 +152,190 @@ print("\\nTop 5 Offices:")
 print(current_df['Office Name'].value_counts().head())
 """
         
+        elif "reformat" in instruction and "insurance" in instruction:
+            return """
+import re
+
+# State abbreviations mapping
+STATE_ABBREVIATIONS = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AR': 'Arkansas', 'AZ': 'Arizona',
+    'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+    'DC': 'District of Columbia', 'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii',
+    'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+    'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine',
+    'MD': 'Maryland', 'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota',
+    'MS': 'Mississippi', 'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska',
+    'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico',
+    'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+    'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island',
+    'SC': 'South Carolina', 'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas',
+    'UT': 'Utah', 'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington',
+    'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+}
+
+def expand_state_abbreviations(text):
+    \"\"\"Expand state abbreviations to full state names\"\"\"
+    if pd.isna(text):
+        return text
+    
+    text_str = str(text)
+    
+    # Look for state abbreviations (2 letters, possibly with spaces around them)
+    for abbr, full_name in STATE_ABBREVIATIONS.items():
+        # Match abbreviation at word boundaries
+        pattern = r'\\b' + abbr + r'\\b'
+        text_str = re.sub(pattern, full_name, text_str, flags=re.IGNORECASE)
+    
+    return text_str
+
+# Reformat Insurance column to match the expected format
+def format_insurance_name(insurance_text):
+    if pd.isna(insurance_text):
+        return insurance_text
+    
+    insurance_str = str(insurance_text).strip()
+    
+    # Handle special cases first
+    if insurance_str.upper() == 'NO INSURANCE':
+        return 'No Insurance'
+    elif insurance_str.upper() == 'PATIENT NOT FOUND':
+        return 'PATIENT NOT FOUND'
+    elif insurance_str.upper() == 'DUPLICATE':
+        return 'DUPLICATE'
+    
+    # Extract company name before "Ph#"
+    if "Ph#" in insurance_str:
+        company_name = insurance_str.split("Ph#")[0].strip()
+    else:
+        company_name = insurance_str
+    
+    # Remove "Primary" and "Secondary" text
+    company_name = re.sub(r'\s*\(Primary\)', '', company_name, flags=re.IGNORECASE)
+    company_name = re.sub(r'\s*\(Secondary\)', '', company_name, flags=re.IGNORECASE)
+    company_name = re.sub(r'\s*Primary', '', company_name, flags=re.IGNORECASE)
+    company_name = re.sub(r'\s*Secondary', '', company_name, flags=re.IGNORECASE)
+    
+    # Handle Delta Dental variations
+    if re.search(r'delta\s+dental', company_name, re.IGNORECASE):
+        # Extract state from Delta Dental
+        delta_match = re.search(r'delta\s+dental\s+(?:of\s+)?(.+)', company_name, re.IGNORECASE)
+        if delta_match:
+            state = delta_match.group(1).strip()
+            # Expand state abbreviations
+            state = expand_state_abbreviations(state)
+            return f"DD {state}"
+        else:
+            return "DD"
+    
+    # Handle BCBS variations
+    if re.search(r'bcbs|blue\s+cross|blue\s+shield', company_name, re.IGNORECASE):
+        # Extract state from BCBS
+        bcbs_match = re.search(r'(?:bcbs|blue\s+cross\s+blue\s+shield|blue\s+cross|blue\s+shield)\s+(?:of\s+)?(.+)', company_name, re.IGNORECASE)
+        if bcbs_match:
+            state = bcbs_match.group(1).strip()
+            # Expand state abbreviations
+            state = expand_state_abbreviations(state)
+            return f"BCBS {state}"
+        else:
+            return "BCBS"
+    
+    # Handle other specific companies
+    if re.search(r'metlife|met\s+life', company_name, re.IGNORECASE):
+        return "Metlife"
+    elif re.search(r'cigna', company_name, re.IGNORECASE):
+        return "Cigna"
+    elif re.search(r'uhc|united\s+healthcare|united\s+health\s+care', company_name, re.IGNORECASE):
+        return "UHC"
+    elif re.search(r'humana', company_name, re.IGNORECASE):
+        return "Humana"
+    elif re.search(r'aetna', company_name, re.IGNORECASE):
+        return "Aetna"
+    elif re.search(r'guardian', company_name, re.IGNORECASE):
+        return "Guardian"
+    elif re.search(r'anthem', company_name, re.IGNORECASE):
+        return "Anthem"
+    elif re.search(r'geha', company_name, re.IGNORECASE):
+        return "GEHA"
+    elif re.search(r'principal', company_name, re.IGNORECASE):
+        return "Principal"
+    elif re.search(r'ameritas', company_name, re.IGNORECASE):
+        return "Ameritas"
+    elif re.search(r'physicians\s+mutual', company_name, re.IGNORECASE):
+        return "Physicians Mutual"
+    elif re.search(r'mutual\s+of\s+omaha', company_name, re.IGNORECASE):
+        return "Mutual Omaha"
+    elif re.search(r'sunlife|sun\s+life', company_name, re.IGNORECASE):
+        return "Sunlife"
+    elif re.search(r'aarp', company_name, re.IGNORECASE):
+        return "AARP"
+    elif re.search(r'teamcare', company_name, re.IGNORECASE):
+        return "TeamCare"
+    elif re.search(r'liberty\s+dental', company_name, re.IGNORECASE):
+        return "Liberty Dental Plan"
+    elif re.search(r'careington', company_name, re.IGNORECASE):
+        return "Careington Benefit Solutions"
+    elif re.search(r'automated\s+benefit', company_name, re.IGNORECASE):
+        return "Automated Benefit Services Inc"
+    elif re.search(r'network\s+health', company_name, re.IGNORECASE):
+        return "Network Health Wisconsin"
+    elif re.search(r'regence', company_name, re.IGNORECASE):
+        return "REGENCE BCBS"
+    elif re.search(r'united\s+concordia', company_name, re.IGNORECASE):
+        return "United Concordia"
+    elif re.search(r'medical\s+mutual', company_name, re.IGNORECASE):
+        return "Medical Mutual"
+    elif re.search(r'blue\s+care\s+dental', company_name, re.IGNORECASE):
+        return "Blue Care Dental"
+    elif re.search(r'dominion\s+dental', company_name, re.IGNORECASE):
+        return "Dominion Dental"
+    elif re.search(r'carefirst', company_name, re.IGNORECASE):
+        return "CareFirst BCBS"
+    elif re.search(r'health\s+partners', company_name, re.IGNORECASE):
+        return "Health Partners"
+    elif re.search(r'keenan', company_name, re.IGNORECASE):
+        return "Keenan"
+    elif re.search(r'wilson\s+mcshane', company_name, re.IGNORECASE):
+        return "Wilson McShane- Delta Dental"
+    elif re.search(r'standard\s+(?:life\s+)?insurance', company_name, re.IGNORECASE):
+        return "Standard Life Insurance"
+    elif re.search(r'plan\s+for\s+health', company_name, re.IGNORECASE):
+        return "Plan for Health"
+    elif re.search(r'kansas\s+city', company_name, re.IGNORECASE):
+        return "Kansas City"
+    elif re.search(r'the\s+guardian', company_name, re.IGNORECASE):
+        return "The Guardian"
+    elif re.search(r'community\s+dental', company_name, re.IGNORECASE):
+        return "Community Dental Associates"
+    elif re.search(r'northeast\s+delta\s+dental', company_name, re.IGNORECASE):
+        return "Northeast Delta Dental"
+    elif re.search(r'say\s+cheese\s+dental', company_name, re.IGNORECASE):
+        return "SAY CHEESE DENTAL NETWORK"
+    elif re.search(r'dentaquest', company_name, re.IGNORECASE):
+        return "Dentaquest"
+    elif re.search(r'umr', company_name, re.IGNORECASE):
+        return "UMR"
+    elif re.search(r'mhbp', company_name, re.IGNORECASE):
+        return "MHBP"
+    elif re.search(r'united\s+states\s+army', company_name, re.IGNORECASE):
+        return "United States Army"
+    elif re.search(r'conversion\s+default', company_name, re.IGNORECASE):
+        return "CONVERSION DEFAULT - Do NOT Delete! Change Pt Ins!"
+    
+    # If no specific pattern matches, return the cleaned company name
+    return company_name.strip()
+
+# Apply the reformatting
+current_df['Insurance New'] = current_df['Insurance'].apply(format_insurance_name)
+
+print("✅ Insurance column reformatted to match expected format!")
+print("Sample of original vs reformatted:")
+sample_df = current_df[['Insurance', 'Insurance New']].head(15)
+print(sample_df.to_string(index=False))
+print(f"\\nTotal reformatted entries: {current_df['Insurance New'].notna().sum()}")
+print("\\nUnique reformatted values:")
+print(current_df['Insurance New'].value_counts().head(25))
+"""
+        
         elif "export" in instruction or "save" in instruction:
             return """
 # Export current data
