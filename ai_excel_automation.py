@@ -244,8 +244,12 @@ def format_insurance_name(insurance_text):
         return "Metlife"
     elif re.search(r'cigna', company_name, re.IGNORECASE):
         return "Cigna"
-    elif re.search(r'uhc|united\s+healthcare|united\s+health\s+care', company_name, re.IGNORECASE):
+    elif re.search(r'aarp', company_name, re.IGNORECASE):
+        return "AARP"
+    elif re.search(r'uhc|united\s*healthcare|united\s*health\s*care', company_name, re.IGNORECASE):
         return "UHC"
+    elif re.search(r'teamcare', company_name, re.IGNORECASE):
+        return "Teamcare"
     elif re.search(r'humana', company_name, re.IGNORECASE):
         return "Humana"
     elif re.search(r'aetna', company_name, re.IGNORECASE):
@@ -254,7 +258,7 @@ def format_insurance_name(insurance_text):
         return "Guardian"
     elif re.search(r'anthem', company_name, re.IGNORECASE):
         return "Anthem"
-    elif re.search(r'geha', company_name, re.IGNORECASE):
+    elif re.search(r'g\s*e\s*h\s*a', company_name, re.IGNORECASE):
         return "GEHA"
     elif re.search(r'principal', company_name, re.IGNORECASE):
         return "Principal"
@@ -266,10 +270,6 @@ def format_insurance_name(insurance_text):
         return "Mutual Omaha"
     elif re.search(r'sunlife|sun\s+life', company_name, re.IGNORECASE):
         return "Sunlife"
-    elif re.search(r'aarp', company_name, re.IGNORECASE):
-        return "AARP"
-    elif re.search(r'teamcare', company_name, re.IGNORECASE):
-        return "TeamCare"
     elif re.search(r'liberty\s+dental', company_name, re.IGNORECASE):
         return "Liberty Dental Plan"
     elif re.search(r'careington', company_name, re.IGNORECASE):
@@ -320,6 +320,10 @@ def format_insurance_name(insurance_text):
         return "United States Army"
     elif re.search(r'conversion\s+default', company_name, re.IGNORECASE):
         return "CONVERSION DEFAULT - Do NOT Delete! Change Pt Ins!"
+    elif re.search(r'equitable', company_name, re.IGNORECASE):
+        return "Equitable"
+    elif re.search(r'manhattan\s+life', company_name, re.IGNORECASE):
+        return "Manhattan Life"
     
     # If no specific pattern matches, return the cleaned company name
     return company_name.strip()
