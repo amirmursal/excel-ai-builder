@@ -382,18 +382,8 @@ HTML_TEMPLATE = """
 
         // Reset app function
         function openComparisonTool() {
-            // Check if we're on Railway (production) or localhost
-            const currentHost = window.location.hostname;
-            let comparisonUrl;
-            
-            if (currentHost.includes('railway.app') || currentHost.includes('up.railway.app')) {
-                // Production: Use the comparison tool URL
-                comparisonUrl = 'https://web-production-9e92a.up.railway.app/comparison';
-            } else {
-                // Local development
-                comparisonUrl = 'http://localhost:5002/comparison';
-            }
-            
+            // Always redirect to Railway comparison tool
+            const comparisonUrl = 'https://web-production-9e92a.up.railway.app/comparison';
             window.open(comparisonUrl, '_blank');
         }
 
