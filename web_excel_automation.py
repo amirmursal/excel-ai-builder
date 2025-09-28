@@ -388,7 +388,7 @@ HTML_TEMPLATE = """
             
             if (currentHost.includes('railway.app') || currentHost.includes('up.railway.app')) {
                 // Production: Use the comparison tool URL
-                comparisonUrl = 'https://your-comparison-app.railway.app/comparison';
+                comparisonUrl = 'https://web-production-9e92a.up.railway.app/comparison';
             } else {
                 // Local development
                 comparisonUrl = 'http://localhost:5002/comparison';
