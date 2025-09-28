@@ -468,6 +468,10 @@ def compare_patient_names(raw_df, previous_df):
     except Exception as e:
         return f"❌ Error during comparison: {str(e)}", None
 
+@app.route('/')
+def root():
+    return redirect('/comparison')
+
 @app.route('/comparison')
 def comparison_index():
     global raw_data, previous_data, raw_filename, previous_filename, comparison_result
