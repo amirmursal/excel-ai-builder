@@ -53,6 +53,33 @@ HTML_TEMPLATE = """
         }
         .header h1 { font-size: 2.5em; margin-bottom: 10px; }
         .header p { font-size: 1.2em; opacity: 0.9; }
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .nav-buttons a {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        .nav-buttons a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .nav-buttons a:active {
+            transform: translateY(0);
+        }
         .content { padding: 30px; }
         .section { 
             margin: 25px 0; 
@@ -187,6 +214,10 @@ HTML_TEMPLATE = """
         </div>
 
         <div class="content">
+            <div class="nav-buttons">
+                <a href="http://localhost:5002/comparison">📊 Comparison Tool</a>
+            </div>
+
             <!-- File Status -->
             <div class="section">
                 <h3>📊 Current File Status</h3>
@@ -840,6 +871,12 @@ def reset_app():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/comparison')
+def redirect_to_comparison():
+    """Redirect to comparison tool"""
+    from flask import redirect
+    return redirect('http://localhost:5002/comparison')
 
 if __name__ == '__main__':
     import os
