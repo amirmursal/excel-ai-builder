@@ -218,7 +218,7 @@ HTML_TEMPLATE = """
 
         <div class="content">
             <div class="nav-buttons">
-                <a href="http://localhost:5001/">🏠 Main App</a>
+                <a href="{{ main_app_url }}">🏠 Main App</a>
             </div>
 
             <!-- File Upload Section -->
@@ -476,7 +476,8 @@ def comparison_index():
                                 previous_data=previous_data,
                                 raw_filename=raw_filename,
                                 previous_filename=previous_filename,
-                                comparison_result=comparison_result)
+                                comparison_result=comparison_result,
+                                main_app_url=os.environ.get('MAIN_APP_URL', 'http://localhost:5001/'))
 
 @app.route('/upload_raw', methods=['POST'])
 def upload_raw_file():

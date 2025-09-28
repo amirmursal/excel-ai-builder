@@ -215,7 +215,7 @@ HTML_TEMPLATE = """
 
         <div class="content">
             <div class="nav-buttons">
-                <a href="http://localhost:5002/comparison">📊 Comparison Tool</a>
+                <a href="#" onclick="openComparisonTool()">📊 Comparison Tool</a>
             </div>
 
             <!-- File Status -->
@@ -381,6 +381,22 @@ HTML_TEMPLATE = """
         }
 
         // Reset app function
+        function openComparisonTool() {
+            // Check if we're on Railway (production) or localhost
+            const currentHost = window.location.hostname;
+            let comparisonUrl;
+            
+            if (currentHost.includes('railway.app') || currentHost.includes('up.railway.app')) {
+                // Production: Use the comparison tool URL
+                comparisonUrl = 'https://your-comparison-app.railway.app/comparison';
+            } else {
+                // Local development
+                comparisonUrl = 'http://localhost:5002/comparison';
+            }
+            
+            window.open(comparisonUrl, '_blank');
+        }
+
         function resetApp() {
             if (confirm('Are you sure you want to reset the app? This will clear all uploaded data.')) {
                 fetch('/reset', {
@@ -709,7 +725,8 @@ def index():
                                 current_data=current_data, 
                                 current_sheet=current_sheet, 
                                 current_filename=current_filename,
-                                output="")
+                                output="",
+                                comparison_url=os.environ.get('COMPARISON_URL', 'http://localhost:5002/comparison'))
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -876,7 +893,7 @@ def reset_app():
 def redirect_to_comparison():
     """Redirect to comparison tool"""
     from flask import redirect
-    return redirect('http://localhost:5002/comparison')
+    return redirect(os.environ.get('COMPARISON_URL', 'http://localhost:5002/comparison'))
 
 if __name__ == '__main__':
     import os
