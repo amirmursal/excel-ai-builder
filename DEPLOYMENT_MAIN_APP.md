@@ -1,48 +1,75 @@
-# Main Excel Automation App - Railway Deployment
+# Main Excel AI Builder - Deployment Guide
 
-## 🚀 Deploy Main App to Railway
+## Current Status
 
-### Step 1: Prepare Repository
+Your main app is already deployed at: `https://web-production-9e92a.up.railway.app`
 
-1. Create a new Git repository for the main app
-2. Copy these files to the repository:
-   - `web_excel_automation.py`
-   - `ai_excel_automation.py`
-   - `requirements.txt`
-   - `runtime.txt`
-   - `Procfile_main` (rename to `Procfile`)
+## After Deploying Comparison Tool
 
-### Step 2: Rename Procfile
+Once you have deployed the comparison tool and have its URL:
 
-```bash
-mv Procfile_main Procfile
+1. **Get the Comparison Tool URL:**
+
+   - It will look like: `https://your-comparison-app.railway.app`
+
+2. **Update Environment Variable:**
+
+   - Go to your Railway project dashboard
+   - Go to "Variables" tab
+   - Add: `COMPARISON_URL` = `https://your-comparison-app.railway.app/comparison`
+
+3. **Redeploy (if needed):**
+   - Railway will automatically redeploy when you add environment variables
+   - Or you can trigger a manual redeploy
+
+## Testing the Integration
+
+1. **Test Main App:**
+
+   - Visit: `https://web-production-9e92a.up.railway.app`
+   - Click "📊 Comparison Tool" button
+   - Should open the comparison tool in a new tab
+
+2. **Test Comparison Tool:**
+   - In the comparison tool, click "🏠 Main App" button
+   - Should redirect back to the main app
+
+## Local Development
+
+To test locally with both apps:
+
+1. **Start Main App:**
+
+   ```bash
+   export COMPARISON_URL="http://localhost:5002/comparison"
+   python web_excel_automation.py
+   ```
+
+2. **Start Comparison Tool:**
+   ```bash
+   cd ../excel-comparison-tool
+   export MAIN_APP_URL="http://localhost:5001/"
+   python excel_comparison.py
+   ```
+
+## Environment Variables
+
+- `COMPARISON_URL`: URL of the comparison tool (default: http://localhost:5002/comparison)
+
+## File Structure
+
 ```
+excel-ai-builder/          # Main app repository
+├── web_excel_automation.py
+├── requirements.txt
+├── runtime.txt
+├── Procfile
+└── DEPLOYMENT_MAIN_APP.md
 
-### Step 3: Deploy on Railway
-
-1. Go to [Railway.app](https://railway.app)
-2. Create new project
-3. Connect your Git repository
-4. Railway will automatically detect and deploy
-
-### Step 4: Access Your App
-
-- Railway will provide a URL like: `https://your-main-app.railway.app`
-- Your main app will be accessible at this URL
-
-## 📁 Files Needed for Main App Deployment:
-
-- ✅ `web_excel_automation.py` (main app)
-- ✅ `ai_excel_automation.py` (core functionality)
-- ✅ `requirements.txt` (dependencies)
-- ✅ `runtime.txt` (Python version)
-- ✅ `Procfile` (deployment command)
-
-## 🎯 Features Available:
-
-- Excel file upload and processing
-- Natural language instructions
-- Insurance name formatting
-- Sheet switching
-- Data export
-- All original functionality
+excel-comparison-tool/     # Comparison tool repository
+├── excel_comparison.py
+├── requirements.txt
+├── runtime.txt
+├── Procfile
+└── DEPLOYMENT.md
+```
