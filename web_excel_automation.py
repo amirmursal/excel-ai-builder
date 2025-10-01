@@ -466,6 +466,8 @@ def format_insurance_name(insurance_text):
         return 'PATIENT NOT FOUND'
     elif insurance_str.upper() == 'DUPLICATE':
         return 'DUPLICATE'
+    elif re.search(r'no\s+patient\s+chart', insurance_str, re.IGNORECASE):
+        return 'No Patient chart'
     
     # Extract company name before "Ph#"
     if "Ph#" in insurance_str:
@@ -491,26 +493,69 @@ def format_insurance_name(insurance_text):
         else:
             return "DD"
     
+    # Handle Anthem variations FIRST (before BCBS to avoid conflicts)
+    if re.search(r'anthem|blue\s+cross.*anthem|anthem.*blue\s+cross', company_name, re.IGNORECASE):
+        return "Anthem"
+    
     # Handle BCBS variations
-    if re.search(r'bcbs|blue\s+cross|blue\s+shield', company_name, re.IGNORECASE):
-        # Extract state from BCBS
-        bcbs_match = re.search(r'(?:bcbs|blue\s+cross\s+blue\s+shield|blue\s+cross|blue\s+shield)\s+(?:of\s+)?(.+)', company_name, re.IGNORECASE)
-        if bcbs_match:
-            state = bcbs_match.group(1).strip()
-            # Expand state abbreviations
-            state = expand_state_abbreviations(state)
-            return f"BCBS {state}"
-        else:
+    elif re.search(r'bcbs|bc/bs|bc\s+of|blue\s+cross|blue\s+shield|bcbbs', company_name, re.IGNORECASE):
+        # Check for full "Blue Cross Blue Shield" pattern first
+        if re.search(r'blue\s+cross\s+blue\s+shield', company_name, re.IGNORECASE):
+            # Extract state from "Blue Cross Blue Shield of [State]"
+            bcbs_match = re.search(r'blue\s+cross\s+blue\s+shield\s+(?:of\s+)?(.+)', company_name, re.IGNORECASE)
+            if bcbs_match:
+                state = bcbs_match.group(1).strip()
+                # Expand state abbreviations
+                state = expand_state_abbreviations(state)
+                return f"BCBS {state}"
+            else:
+                return "BCBS"
+        # Handle BC/BS patterns
+        elif re.search(r'bc/bs', company_name, re.IGNORECASE):
+            bcbs_match = re.search(r'bc/bs\s+(?:of\s+)?(.+)', company_name, re.IGNORECASE)
+            if bcbs_match:
+                state = bcbs_match.group(1).strip()
+                # Expand state abbreviations
+                state = expand_state_abbreviations(state)
+                return f"BCBS {state}"
+            else:
+                return "BCBS"
+        # Handle BC Of patterns
+        elif re.search(r'bc\s+of', company_name, re.IGNORECASE):
+            bcbs_match = re.search(r'bc\s+of\s+(.+)', company_name, re.IGNORECASE)
+            if bcbs_match:
+                state = bcbs_match.group(1).strip()
+                # Expand state abbreviations
+                state = expand_state_abbreviations(state)
+                return f"BCBS {state}"
+            else:
+                return "BCBS"
+        # Handle BCBBS typo
+        elif re.search(r'bcbbs', company_name, re.IGNORECASE):
             return "BCBS"
+        # Handle other BCBS patterns
+        else:
+            bcbs_match = re.search(r'(?:bcbs|blue\s+cross|blue\s+shield)\s+(?:of\s+)?(.+)', company_name, re.IGNORECASE)
+            if bcbs_match:
+                state = bcbs_match.group(1).strip()
+                # Expand state abbreviations
+                state = expand_state_abbreviations(state)
+                return f"BCBS {state}"
+            else:
+                return "BCBS"
     
     # Handle other specific companies
-    if re.search(r'metlife|met\s+life', company_name, re.IGNORECASE):
+    elif re.search(r'metlife|met\s+life', company_name, re.IGNORECASE):
         return "Metlife"
     elif re.search(r'cigna', company_name, re.IGNORECASE):
         return "Cigna"
     elif re.search(r'aarp', company_name, re.IGNORECASE):
         return "AARP"
-    elif re.search(r'uhc|united\s*healthcare|united\s*health\s*care', company_name, re.IGNORECASE):
+    elif re.search(r'adn\s+administrators', company_name, re.IGNORECASE):
+        return "ADN Administrators"
+    elif re.search(r'beam', company_name, re.IGNORECASE):
+        return "Beam"
+    elif re.search(r'uhc|united.*health|united.*heal|unitedhelathcare', company_name, re.IGNORECASE):
         return "UHC"
     elif re.search(r'teamcare', company_name, re.IGNORECASE):
         return "Teamcare"
@@ -520,8 +565,6 @@ def format_insurance_name(insurance_text):
         return "Aetna"
     elif re.search(r'guardian', company_name, re.IGNORECASE):
         return "Guardian"
-    elif re.search(r'anthem', company_name, re.IGNORECASE):
-        return "Anthem"
     elif re.search(r'g\s*e\s*h\s*a', company_name, re.IGNORECASE):
         return "GEHA"
     elif re.search(r'principal', company_name, re.IGNORECASE):
@@ -534,14 +577,18 @@ def format_insurance_name(insurance_text):
         return "Mutual Omaha"
     elif re.search(r'sunlife|sun\s+life', company_name, re.IGNORECASE):
         return "Sunlife"
-    elif re.search(r'liberty\s+dental', company_name, re.IGNORECASE):
+    elif re.search(r'liberty(?:\s+dental)?', company_name, re.IGNORECASE):
         return "Liberty Dental Plan"
     elif re.search(r'careington', company_name, re.IGNORECASE):
         return "Careington Benefit Solutions"
     elif re.search(r'automated\s+benefit', company_name, re.IGNORECASE):
         return "Automated Benefit Services Inc"
     elif re.search(r'network\s+health', company_name, re.IGNORECASE):
-        return "Network Health Wisconsin"
+        # Check if it has "Wisconsin" in the name
+        if re.search(r'wisconsin', company_name, re.IGNORECASE):
+            return "Network Health Wisconsin"
+        else:
+            return "Network Health Go"
     elif re.search(r'regence', company_name, re.IGNORECASE):
         return "REGENCE BCBS"
     elif re.search(r'united\s+concordia', company_name, re.IGNORECASE):
@@ -554,8 +601,14 @@ def format_insurance_name(insurance_text):
         return "Dominion Dental"
     elif re.search(r'carefirst', company_name, re.IGNORECASE):
         return "CareFirst BCBS"
-    elif re.search(r'health\s+partners', company_name, re.IGNORECASE):
-        return "Health Partners"
+    elif re.search(r'health\s*partners', company_name, re.IGNORECASE):
+        # Check if it has "of [State]" pattern
+        if re.search(r'health\s*partners\s+of\s+(.+)', company_name, re.IGNORECASE):
+            state_match = re.search(r'health\s*partners\s+of\s+(.+)', company_name, re.IGNORECASE)
+            state = state_match.group(1).strip()
+            return f"Health Partners {state}"
+        else:
+            return "Health Partners"
     elif re.search(r'keenan', company_name, re.IGNORECASE):
         return "Keenan"
     elif re.search(r'wilson\s+mcshane', company_name, re.IGNORECASE):
@@ -573,7 +626,7 @@ def format_insurance_name(insurance_text):
     elif re.search(r'northeast\s+delta\s+dental', company_name, re.IGNORECASE):
         return "Northeast Delta Dental"
     elif re.search(r'say\s+cheese\s+dental', company_name, re.IGNORECASE):
-        return "SAY CHEESE DENTAL NETWORK"
+        return "Say Cheese Dental Network"
     elif re.search(r'dentaquest', company_name, re.IGNORECASE):
         return "Dentaquest"
     elif re.search(r'umr', company_name, re.IGNORECASE):
@@ -588,6 +641,66 @@ def format_insurance_name(insurance_text):
         return "Equitable"
     elif re.search(r'manhattan\s+life', company_name, re.IGNORECASE):
         return "Manhattan Life"
+    elif re.search(r'ucci', company_name, re.IGNORECASE):
+        return "UCCI"
+    elif re.search(r'ccpoa|cc\s*poa|c\s+c\s+p\s+o\s+a', company_name, re.IGNORECASE):
+        return "CCPOA"
+    elif re.search(r'dd\s+of|dd\s+[a-z]{2}|delta\s+dental|dental\s+dental|denta\s+dental|dleta\s+dental|dektal?\s+dental', company_name, re.IGNORECASE):
+        # Extract state from various Delta Dental patterns
+        # Handle DD OF [State] pattern
+        if re.search(r'dd\s+of\s+([a-z]{2})', company_name, re.IGNORECASE):
+            state_match = re.search(r'dd\s+of\s+([a-z]{2})', company_name, re.IGNORECASE)
+            state = state_match.group(1).upper()
+            state = expand_state_abbreviations(state)
+            return f'DD {state}'
+        # Handle DD [State] pattern
+        elif re.search(r'dd\s+([a-z]{2})', company_name, re.IGNORECASE):
+            state_match = re.search(r'dd\s+([a-z]{2})', company_name, re.IGNORECASE)
+            state = state_match.group(1).upper()
+            state = expand_state_abbreviations(state)
+            return f'DD {state}'
+        # Handle Delta Dental of [State] pattern
+        elif re.search(r'delta\s+dental\s+of\s+(.+)', company_name, re.IGNORECASE):
+            state_match = re.search(r'delta\s+dental\s+of\s+(.+)', company_name, re.IGNORECASE)
+            state = state_match.group(1).strip()
+            state = expand_state_abbreviations(state)
+            return f'DD {state}'
+        # Handle Dental Dental Of [State] pattern
+        elif re.search(r'dental\s+dental\s+of\s+(.+)', company_name, re.IGNORECASE):
+            state_match = re.search(r'dental\s+dental\s+of\s+(.+)', company_name, re.IGNORECASE)
+            state = state_match.group(1).strip()
+            state = expand_state_abbreviations(state)
+            return f'DD {state}'
+        # Handle Denta Dental Of [State] pattern
+        elif re.search(r'denta\s+dental\s+of\s+(.+)', company_name, re.IGNORECASE):
+            state_match = re.search(r'denta\s+dental\s+of\s+(.+)', company_name, re.IGNORECASE)
+            state = state_match.group(1).strip()
+            state = expand_state_abbreviations(state)
+            return f'DD {state}'
+        # Handle Dleta Dental of [State] pattern
+        elif re.search(r'dleta\s+dental\s+of\s+(.+)', company_name, re.IGNORECASE):
+            state_match = re.search(r'dleta\s+dental\s+of\s+(.+)', company_name, re.IGNORECASE)
+            state = state_match.group(1).strip()
+            state = expand_state_abbreviations(state)
+            return f'DD {state}'
+        # Handle Dekta Dental of [State] pattern
+        elif re.search(r'dektal?\s+dental\s+of\s+(.+)', company_name, re.IGNORECASE):
+            state_match = re.search(r'dektal?\s+dental\s+of\s+(.+)', company_name, re.IGNORECASE)
+            state = state_match.group(1).strip()
+            state = expand_state_abbreviations(state)
+            return f'DD {state}'
+        # Handle Dental of [State] pattern
+        elif re.search(r'dental\s+of\s+(.+)', company_name, re.IGNORECASE):
+            state_match = re.search(r'dental\s+of\s+(.+)', company_name, re.IGNORECASE)
+            state = state_match.group(1).strip()
+            state = expand_state_abbreviations(state)
+            return f'DD {state}'
+        # Handle Dental Network of America
+        elif re.search(r'dental\s+network\s+of\s+america', company_name, re.IGNORECASE):
+            return 'DD Network of America'
+        # Default DD
+        else:
+            return 'DD'
     
     # If no specific pattern matches, return the cleaned company name
     return company_name.strip()
